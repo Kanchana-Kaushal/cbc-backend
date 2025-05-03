@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import { jwtSecretKey } from "../config/env.js";
 
+//This is basic jwt verification
 export const authMiddleware = (req, res, next) => {
     const tokenString = req.header("Authorization");
-    console.log(tokenString + "1");
 
     if (tokenString) {
         const token = tokenString.split(" ")[1];
@@ -17,6 +17,7 @@ export const authMiddleware = (req, res, next) => {
     } else next();
 };
 
+//This midddleware is used to authorize all users
 export const verifyUser = (req, res, next) => {
     try {
         if (req.user) {
@@ -31,6 +32,7 @@ export const verifyUser = (req, res, next) => {
     }
 };
 
+//This middleware is used to authorize admin only tasks
 export const verifyAdmin = (req, res, next) => {
     try {
         if (req.user) {

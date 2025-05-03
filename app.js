@@ -9,8 +9,8 @@ import errorHandler from "./middleware/error.middleware.js";
 import { authMiddleware } from "./middleware/auth.middleware.js";
 
 const app = express();
-app.use(express.json());
 app.use(authMiddleware);
+app.use(express.json());
 
 //routes
 app.use("/api/auth", authRouter);

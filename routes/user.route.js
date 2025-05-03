@@ -1,14 +1,20 @@
 import { Router } from "express";
+import { verifyAdmin, verifyUser } from "../middleware/auth.middleware.js";
+import {
+    banUser,
+    getAllUsers,
+    getUserById,
+    updateUser,
+} from "../controllers/user.controller.js";
+
 const userRouter = Router();
 
-userRouter.get("/:page", (req, res) => res.send("Get all users"));
+userRouter.get("/:page", verifyAdmin, getAllUsers);
 
-userRouter.get("/user/:id", (req, res) => res.send("Get all users by id"));
+userRouter.get("/user/:id", verifyUser, getUserById);
 
-userRouter.put("/user/:id/update-account", (req, res) =>
-    res.send("Update Account")
-);
+userRouter.put("/user/:id/update-user", verifyUser, updateUser);
 
-userRouter.put("/user/:id/ban-user", (req, res) => res.send("Ban User"));
+userRouter.put("/user/:id/ban-user", verifyAdmin, banUser);
 
 export default userRouter;
