@@ -6,9 +6,11 @@ import authRouter from "./routes/auth.route.js";
 import orderRouter from "./routes/order.route.js";
 import productRouter from "./routes/products.route.js";
 import errorHandler from "./middleware/error.middleware.js";
+import { authMiddleware } from "./middleware/auth.middleware.js";
 
 const app = express();
 app.use(express.json());
+app.use(authMiddleware);
 
 //routes
 app.use("/api/auth", authRouter);

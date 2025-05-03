@@ -26,6 +26,7 @@ export const signUp = async (req, res, next) => {
         const newUser = await user.save();
 
         const payload = {
+            userId: newUser._id,
             email: newUser.email,
             role: newUser.role,
         };
@@ -63,15 +64,24 @@ export const signIn = async (req, res, next) => {
             throw err;
         }
 
+        if (user.banned) {
+            const err = new Error(
+                "User for this email is banned from this platform"
+            );
+            err.statusCode = 401;
+            throw err;
+        }
+
         const isPasswordValid = await verifyHash(user.password, password);
 
         if (!isPasswordValid) {
             const err = new Error("Password does not match");
-            err.statusCode = 404;
+            err.statusCode = 400;
             throw err;
         }
 
         const payload = {
+            userId: user._id,
             email: user.email,
             role: user.role,
         };
@@ -122,6 +132,7 @@ export const createAdmin = async (req, res, next) => {
         const newUser = await user.save();
 
         const payload = {
+            userId: newUser._id,
             email: newUser.email,
             role: newUser.role,
         };
