@@ -1,18 +1,29 @@
 import { Router } from "express";
+import { verifyAdmin, verifyUser } from "../middleware/auth.middleware.js";
+import {
+    createNewProduct,
+    deleteProduct,
+    getAllProducts,
+    getProductById,
+    addReview,
+    updateProduct,
+    hideReview,
+} from "../controllers/product.controller.js";
+
 const productRouter = Router();
 
-productRouter.get("/", (req, res) => res.send("Get all products"));
+productRouter.get("/", getAllProducts);
 
-productRouter.get("/:productId", (req, res) => res.send("Get one product"));
+productRouter.get("/:productId", getProductById);
 
-productRouter.post("/add-new", (req, res) => res.send("Add new product"));
+productRouter.post("/add-new", verifyAdmin, createNewProduct);
 
-productRouter.post("/:productId/add-review", (req, res) =>
-    res.send("Add review")
-);
+productRouter.post("/:productId/add-review", verifyUser, addReview);
 
-productRouter.delete("/:productId", (req, res) => res.send("Delete product"));
+productRouter.delete("/:productId", verifyAdmin, deleteProduct);
 
-productRouter.post("/:productId", (req, res) => res.send("Update product"));
+productRouter.put("/:productId", verifyAdmin, updateProduct);
+
+productRouter.put("/:productId/hide-review", verifyAdmin, hideReview);
 
 export default productRouter;

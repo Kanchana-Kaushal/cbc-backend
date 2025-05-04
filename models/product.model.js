@@ -77,13 +77,6 @@ const productSchema = new mongoose.Schema(
                 type: Number,
                 required: true,
                 min: 0,
-                validate: {
-                    validator: function (value) {
-                        return value <= this.markedPriceCents;
-                    },
-                    message:
-                        "Selling price should be lower or equal to Marked price",
-                },
             },
         },
 
@@ -142,7 +135,7 @@ const productSchema = new mongoose.Schema(
                     default: Date.now,
                     immutable: true,
                 },
-                approved: {
+                hidden: {
                     type: Boolean,
                     default: false,
                 },

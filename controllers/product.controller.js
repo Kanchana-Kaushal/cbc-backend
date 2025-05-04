@@ -1,0 +1,283 @@
+import Product from "../models/product.model.js";
+
+export const createNewProduct = async (req, res, next) => {
+    const {
+        name,
+        description,
+        images,
+        category,
+        brand,
+        keywords,
+        priceInfo,
+        inventory,
+    } = req.body;
+
+    if (!priceInfo.markedPriceCents >= priceInfo.sellingPriceCents) {
+        const err = new Error(
+            "Selling price should be lower than Marked price."
+        );
+        err.statusCode = 400;
+        throw err;
+    }
+
+    try {
+        const product = new Product({
+            name,
+            description,
+            images,
+            category,
+            brand,
+            keywords,
+            priceInfo,
+            inventory,
+        });
+
+        const newProduct = await product.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Product saved successfully",
+            data: {
+                product: newProduct,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getAllProducts = async (req, res, next) => {
+    try {
+        if (req.user) {
+            const role = req.user.role;
+
+            if (role === "admin") {
+                const products = await Product.find().select(
+                    "-description -__v -brand -reviews "
+                );
+
+                res.status(200).json({
+                    success: true,
+                    message: "Products fetched successfully",
+                    data: {
+                        products,
+                    },
+                });
+
+                return;
+            }
+        }
+
+        const products = await Product.find({
+            "inventory.available": true,
+        }).select("-description -__v -brand -reviews");
+
+        res.status(200).json({
+            success: true,
+            message: "Products fetched successfully",
+            data: {
+                products,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getProductById = async (req, res, next) => {
+    const productId = req.params.productId;
+
+    try {
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            const err = new Error("Invalid ID or product not found");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Product fetched successfully",
+            data: {
+                product,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const deleteProduct = async (req, res, next) => {
+    const productId = req.params.productId;
+
+    try {
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            const err = new Error(
+                "Invalid ID or product is already been deleted"
+            );
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const deleteInfo = await Product.deleteOne({ _id: productId });
+
+        res.status(200).json({
+            success: true,
+            message: "Product deleted successfully",
+            data: {
+                deleteInfo,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const addReview = async (req, res, next) => {
+    const productId = req.params.productId;
+    const { userId, rating, description, images } = req.body;
+
+    try {
+        const existingProduct = await Product.findById(productId);
+
+        if (!existingProduct) {
+            const err = new Error("Invalid ID or product does not exists");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const alreadyReviewed = existingProduct.reviews.some(
+            (review) => review.userId.toString() === userId
+        );
+
+        if (alreadyReviewed) {
+            const err = new Error("You have already reviewed this product");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const currentRatingAvg = existingProduct.rating.average;
+        const currentRatingCount = existingProduct.rating.count;
+        const currentTotalStars = currentRatingAvg * currentRatingCount;
+
+        const newTotalStars = currentTotalStars + rating;
+        const newRatingCount = currentRatingCount + 1;
+        const newRatingAvg = newTotalStars / newRatingCount;
+
+        const newReview = {
+            userId,
+            rating,
+            description,
+            images,
+        };
+
+        const newRating = {
+            average: newRatingAvg,
+            count: newRatingCount,
+        };
+
+        const product = await Product.findByIdAndUpdate(
+            productId,
+            { $push: { reviews: newReview }, $set: { rating: newRating } },
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Review added successfully",
+            data: {
+                product,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const updateProduct = async (req, res, next) => {
+    const productId = req.params.productId;
+    const {
+        name,
+        description,
+        images,
+        category,
+        brand,
+        bestSeller,
+        keywords,
+        priceInfo,
+        inventory,
+    } = req.body;
+
+    try {
+        const existingproduct = await Product.findById(productId);
+
+        if (!existingproduct) {
+            const err = new Error("Product not found");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const updatefields = {
+            name,
+            description,
+            images,
+            category,
+            brand,
+            bestSeller,
+            keywords,
+            priceInfo,
+            inventory,
+        };
+
+        const product = await Product.findByIdAndUpdate(
+            productId,
+            { $set: updatefields },
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Product updated successfully",
+            data: {
+                product,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const hideReview = async (req, res, next) => {
+    const productId = req.params.productId;
+    const { reviewId, hidden } = req.body;
+
+    try {
+        const existingproduct = await Product.findById(productId);
+
+        if (!existingproduct) {
+            const err = new Error("Product not found");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        await Product.updateOne(
+            { _id: productId, "reviews._id": reviewId },
+            { $set: { "reviews.$.hidden": hidden } }
+        );
+
+        const product = await Product.findById(productId);
+
+        res.status(200).json({
+            success: true,
+            message: `Review ${hidden ? "Hidden" : "Shown"} successfully`,
+            data: {
+                product,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};

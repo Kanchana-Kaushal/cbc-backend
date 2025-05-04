@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { signIn, signUp } from "../controllers/auth.controller.js";
+import { createAdmin, signIn, signUp } from "../controllers/auth.controller.js";
+import { verifyAdmin } from "../middleware/auth.middleware.js";
 
 const authRouter = Router();
 
@@ -7,6 +8,6 @@ authRouter.post("/sign-up", signUp);
 
 authRouter.post("/sign-in", signIn);
 
-authRouter.post("/create-admin", (req, res) => res.send("Create new admin"));
+authRouter.post("/create-admin", verifyAdmin, createAdmin);
 
 export default authRouter;

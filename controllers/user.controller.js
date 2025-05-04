@@ -32,6 +32,13 @@ export const getUserById = async (req, res, next) => {
     try {
         if (role === "admin") {
             const user = await User.findById(id).select("-__V -password");
+
+            if (!user) {
+                const err = new Error("Invalid ID or user not found");
+                err.statusCode = 404;
+                throw err;
+            }
+
             res.status(200).json({
                 success: true,
                 message: "User fetched successfully",
@@ -49,6 +56,13 @@ export const getUserById = async (req, res, next) => {
         }
 
         const user = await User.findById(id).select("-__V -password");
+
+        if (!user) {
+            const err = new Error("Invalid ID or user not found");
+            err.statusCode = 404;
+            throw err;
+        }
+
         res.status(200).json({
             success: true,
             message: "User fetched successfully",
@@ -64,8 +78,8 @@ export const getUserById = async (req, res, next) => {
 export const updateUser = async (req, res, next) => {
     const { userId } = req.user;
     const id = req.params.id;
-    const newAvatarUrl = req.body.avatar;
-    const newUserName = req.body.userName;
+    const avatar = req.body.avatar;
+    const username = req.body.userName;
 
     try {
         if (userId !== id) {
@@ -74,39 +88,26 @@ export const updateUser = async (req, res, next) => {
             throw err;
         }
 
-        const user = await User.findById(id);
+        const existingUser = await User.findById(id);
 
-        if (!user) {
+        if (!existingUser) {
             const err = new Error("User not found");
             err.statusCode = 404;
             throw err;
         }
 
-        const updateInfo = await User.updateOne(
-            { _id: id },
-            { $set: { avatar: newAvatarUrl, username: newUserName } }
-        );
+        const updatefields = { username, avatar };
 
-        if (updateInfo.acknowledged === false) {
-            const err = new Error(
-                "User Update unsuccessful maybe missing required fields?"
-            );
-            err.statusCode = 400;
-            throw err;
-        }
-
-        if (updateInfo.modifiedCount < 1) {
-            const err = new Error("User already updated");
-            err.statusCode = 400;
-            throw err;
-        }
+        const user = await User.findByIdAndUpdate(
+            id,
+            { $set: updatefields },
+            { new: true, runValidators: true }
+        ).select("-__V -password");
 
         res.status(200).json({
             success: true,
             message: "User Updated updated successfully",
-            data: {
-                updateInfo,
-            },
+            data: user,
         });
     } catch (err) {
         next(err);
@@ -117,24 +118,25 @@ export const banUser = async (req, res, next) => {
     const { userId, banned } = req.body;
 
     try {
-        const user = await User.findById(userId);
+        const existngUser = await User.findById(userId);
 
-        if (!user) {
+        if (!existngUser) {
             const err = new Error("User not found");
             err.statusCode = 404;
             throw err;
         }
 
-        const updateInfo = await User.updateOne(
+        const user = await User.findByIdAndUpdate(
             { _id: userId },
-            { $set: { banned: banned } }
-        );
+            { $set: { banned: banned } },
+            { new: true, runValidators: true }
+        ).select("-__V -password");
 
         res.status(200).json({
             success: true,
             message: "User Banned Successfully",
             data: {
-                updateInfo,
+                user,
             },
         });
     } catch (err) {
