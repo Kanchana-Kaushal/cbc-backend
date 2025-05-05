@@ -8,12 +8,24 @@ const orderSchema = new mongoose.Schema(
             ref: "User",
         },
 
+        orderId: {
+            type: String,
+            unique: true,
+            required: true,
+        },
+
         deliveryDetails: {
+            recieversName: {
+                type: String,
+                required: true,
+                minLength: 2,
+                maxLength: 50,
+            },
+
             address: {
                 street: {
                     type: String,
                     required: [true, "Street is required"],
-                    trim: true,
                 },
                 city: {
                     type: String,
@@ -63,6 +75,7 @@ const orderSchema = new mongoose.Schema(
                     required: true,
                     ref: "Product",
                 },
+
                 priceCents: {
                     type: Number,
                     required: true,

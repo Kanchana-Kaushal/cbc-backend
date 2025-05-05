@@ -1,18 +1,23 @@
 import { Router } from "express";
+import { verifyUser, verifyAdmin } from "../middleware/auth.middleware.js";
+import {
+    placeOrder,
+    getAllOrders,
+    getOrderByUserId,
+    getOrderById,
+    updateStatus,
+} from "../controllers/order.controller.js";
+
 const orderRouter = Router();
 
-orderRouter.get("/:page", (req, res) => res.send("get all orders"));
+orderRouter.get("/:status", verifyAdmin, getAllOrders);
 
-orderRouter.get("/:userId/my-orders", (req, res) =>
-    res.send("get all orders by user id")
-);
+orderRouter.get("/:userId/my-orders", verifyUser, getOrderByUserId);
 
-orderRouter.get("/:orderId", (req, res) => res.send("Get order details"));
+orderRouter.get("/order/:orderId", verifyUser, getOrderById);
 
-orderRouter.post("/place-order", (req, res) => res.send("Place order"));
+orderRouter.post("/place-order", verifyUser, placeOrder);
 
-orderRouter.put("/order/:orderId", (req, res) =>
-    res.send("Update order status")
-);
+orderRouter.put("/update/:orderId", verifyUser, updateStatus);
 
 export default orderRouter;

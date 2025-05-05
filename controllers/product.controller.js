@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import Order from "../models/order.model.js";
 
 export const createNewProduct = async (req, res, next) => {
     const {
@@ -155,6 +156,20 @@ export const addReview = async (req, res, next) => {
 
         if (alreadyReviewed) {
             const err = new Error("You have already reviewed this product");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const isProductPurchased = await Order.findOne({
+            userId: userId,
+            "products.productId": productId,
+            status: "delivered",
+        });
+
+        if (!isProductPurchased) {
+            const err = new Error(
+                "You must purchase and recieve this product to leave a review"
+            );
             err.statusCode = 404;
             throw err;
         }

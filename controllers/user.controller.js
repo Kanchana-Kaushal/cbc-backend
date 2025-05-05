@@ -84,7 +84,7 @@ export const updateUser = async (req, res, next) => {
     try {
         if (userId !== id) {
             const err = new Error("User unauthorized");
-            err.statusCode = 401;
+            err.statusCode = 403;
             throw err;
         }
 
