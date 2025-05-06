@@ -13,6 +13,8 @@ export const createNewProduct = async (req, res, next) => {
         inventory,
     } = req.body;
 
+    let productId;
+
     if (!priceInfo.markedPriceCents >= priceInfo.sellingPriceCents) {
         const err = new Error(
             "Selling price should be lower than Marked price."
@@ -21,8 +23,28 @@ export const createNewProduct = async (req, res, next) => {
         throw err;
     }
 
+    const lastProductList = await Product.find()
+        .sort({ createdAt: -1 })
+        .limit(1);
+
+    if (lastProductList.length === 0) {
+        productId = "PROD001";
+    } else {
+        const lastProduct = lastProductList[0];
+        const lastProductId = lastProduct.productId; //"PROD0061"
+        const lastProductNumber = lastProductId.replace("PROD", ""); //"0061"
+        const lastProductNumberInt = parseInt(lastProductNumber); //61
+        const newProductNumberInt = lastProductNumberInt + 1; //62
+        const newProductNumberStr = newProductNumberInt
+            .toString()
+            .padStart(3, "0"); // "0062"
+
+        productId = "PROD" + newProductNumberStr;
+    }
+
     try {
         const product = new Product({
+            productId,
             name,
             description,
             images,

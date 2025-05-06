@@ -47,7 +47,9 @@ export const placeOrder = async (req, res, next) => {
             })
         );
 
-        const lastOrderList = await Order.find().sort({ date: -1 }).limit(1);
+        const lastOrderList = await Order.find()
+            .sort({ createdAt: -1 })
+            .limit(1);
 
         if (lastOrderList.length === 0) {
             orderId = "ORD00001";
