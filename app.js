@@ -7,8 +7,10 @@ import orderRouter from "./routes/order.route.js";
 import productRouter from "./routes/products.route.js";
 import errorHandler from "./middleware/error.middleware.js";
 import { authMiddleware } from "./middleware/auth.middleware.js";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 app.use(authMiddleware);
 app.use(express.json());
 

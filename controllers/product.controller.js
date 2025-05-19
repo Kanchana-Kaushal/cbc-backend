@@ -75,9 +75,7 @@ export const getAllProducts = async (req, res, next) => {
             const role = req.user.role;
 
             if (role === "admin") {
-                const products = await Product.find().select(
-                    "-description -__v -brand -reviews "
-                );
+                const products = await Product.find().select(" -__v  ");
 
                 res.status(200).json({
                     success: true,
@@ -93,7 +91,7 @@ export const getAllProducts = async (req, res, next) => {
 
         const products = await Product.find({
             "inventory.available": true,
-        }).select("-description -__v -brand -reviews");
+        }).select("-__v ");
 
         res.status(200).json({
             success: true,
