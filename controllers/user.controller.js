@@ -1,22 +1,31 @@
 import User from "../models/user.model.js";
 
 export const getAllUsers = async (req, res, next) => {
-    const page = req.params.page;
-    const limit = 10;
-    const skip = limit * (page - 1);
-
     try {
-        const users = await User.find()
-            .limit(limit)
-            .skip(skip)
-            .select("-__v -password");
-        const total = await User.countDocuments();
+        const users = await User.find().select("-__v -password");
 
         res.status(200).json({
             success: true,
             message: "Users fetched successfully",
             data: {
-                total,
+                users,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getAllAdmins = async (req, res, next) => {
+    try {
+        const users = await User.find({ role: "admin" }).select(
+            "-__v -password"
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Users fetched successfully",
+            data: {
                 users,
             },
         });

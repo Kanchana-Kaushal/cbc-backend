@@ -131,14 +131,6 @@ export const createAdmin = async (req, res, next) => {
 
         const newUser = await user.save();
 
-        const payload = {
-            userId: newUser._id,
-            email: newUser.email,
-            role: newUser.role,
-        };
-
-        const token = genToken(payload);
-
         res.status(200).json({
             success: true,
             message: "User signed up successfully",
@@ -150,7 +142,6 @@ export const createAdmin = async (req, res, next) => {
                     email: newUser.email,
                     role: newUser.role,
                 },
-                token,
             },
         });
     } catch (err) {

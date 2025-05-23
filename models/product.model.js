@@ -26,7 +26,6 @@ const productSchema = new mongoose.Schema(
             {
                 type: String,
                 trim: true,
-                lowercase: true,
                 validate: {
                     validator: function (v) {
                         return /^(http|https):\/\/[^ "]+$/.test(v);
