@@ -88,7 +88,6 @@ export const updateUser = async (req, res, next) => {
     const { userId } = req.user;
     const id = req.params.id;
     const avatar = req.body.avatar;
-    const username = req.body.userName;
 
     try {
         if (userId !== id) {
@@ -105,7 +104,7 @@ export const updateUser = async (req, res, next) => {
             throw err;
         }
 
-        const updatefields = { username, avatar };
+        const updatefields = { avatar };
 
         const user = await User.findByIdAndUpdate(
             id,
@@ -116,7 +115,15 @@ export const updateUser = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "User Updated updated successfully",
-            data: user,
+            data: {
+                user: {
+                    userId: user._id,
+                    username: user.username,
+                    avatar: user.avatar,
+                    email: user.email,
+                    role: user.role,
+                },
+            },
         });
     } catch (err) {
         next(err);
@@ -143,7 +150,7 @@ export const banUser = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: "User Banned Successfully",
+            message: "Operation Successful",
             data: {
                 user,
             },

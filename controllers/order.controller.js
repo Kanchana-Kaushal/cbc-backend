@@ -114,14 +114,12 @@ export const getAllOrders = async (req, res, next) => {
 
     try {
         const orders = await Order.find({ status }).sort({ date: -1 });
-        const ordersCount = await Order.countDocuments({ status });
 
         res.status(200).json({
             success: true,
             message: "Orders fetched successfully",
             data: {
                 orders,
-                count: ordersCount,
             },
         });
     } catch (err) {
@@ -150,11 +148,54 @@ export const getOrderByUserId = async (req, res, next) => {
 
         const orders = await Order.find({ userId: userId }).sort({ date: -1 });
 
+        if (orders.length > 0) {
+            const detailedOrders = await Promise.all(
+                orders.map(async (order) => {
+                    const newProductDetails = await Promise.all(
+                        order.products.map(async (product) => {
+                            const productDetails = await Product.findById(
+                                product.productId
+                            ).select("name productId brand images category");
+
+                            if (!productDetails) {
+                                const err = new Error(
+                                    "Some products in the order were not found"
+                                );
+                                err.statusCode = 404;
+                                throw err;
+                            }
+
+                            return {
+                                name: productDetails.name,
+                                image: productDetails.images?.[0],
+                                category: productDetails.category,
+                                brand: productDetails.brand,
+                                qty: product.qty,
+                                priceCents: product.priceCents,
+                            };
+                        })
+                    );
+
+                    return { order, products: newProductDetails };
+                })
+            );
+
+            res.status(200).json({
+                success: true,
+                message: "Orders fetched successfully",
+                data: {
+                    orders: detailedOrders,
+                },
+            });
+
+            return;
+        }
+
         res.status(200).json({
             success: true,
             message: "Orders fetched successfully",
             data: {
-                orders,
+                orders: [],
             },
         });
     } catch (err) {
@@ -167,39 +208,61 @@ export const getOrderById = async (req, res, next) => {
     const { userId, role } = req.user;
 
     try {
-        if (role === "admin") {
-            const order = await Order.findOne({ orderId });
-
-            if (!order) {
-                const err = new Error("Order Not found");
-                err.statusCode = 404;
-                throw err;
-            }
-
-            res.status(200).json({
-                success: true,
-                message: "Orders fetched successfully",
-                data: {
-                    order,
-                },
-            });
-
-            return;
-        }
-
-        const order = await Order.findOne({ orderId, userId });
+        const orderQuery = role === "admin" ? { orderId } : { orderId, userId };
+        const order = await Order.findOne(orderQuery);
 
         if (!order) {
-            const err = new Error("Order Not found");
+            const err = new Error("Order not found");
             err.statusCode = 404;
             throw err;
         }
 
+        const user = await User.findById(order.userId).select(
+            "username email avatar -_id"
+        );
+
+        if (!user) {
+            const err = new Error("User not found");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const newProductDetails = await Promise.all(
+            order.products.map(async (product) => {
+                const productDetails = await Product.findById(
+                    product.productId
+                ).select("name productId brand images category");
+
+                if (!productDetails) {
+                    const err = new Error(
+                        "Some products in the order were not found"
+                    );
+                    err.statusCode = 404;
+                    throw err;
+                }
+
+                return {
+                    name: productDetails.name,
+                    image: productDetails.images?.[0],
+                    category: productDetails.category,
+                    brand: productDetails.brand,
+                    qty: product.qty,
+                    priceCents: product.priceCents,
+                };
+            })
+        );
+
+        const detailedOrder = {
+            order,
+            products: newProductDetails,
+            user,
+        };
+
         res.status(200).json({
             success: true,
-            message: "Orders fetched successfully",
+            message: "Order fetched successfully",
             data: {
-                order,
+                order: detailedOrder,
             },
         });
     } catch (err) {
