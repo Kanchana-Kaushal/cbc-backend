@@ -128,12 +128,6 @@ const productSchema = new mongoose.Schema(
                     maxLength: 150,
                     required: true,
                 },
-                images: [
-                    {
-                        type: String,
-                        trim: true,
-                    },
-                ],
                 createdAt: {
                     type: Date,
                     default: Date.now,

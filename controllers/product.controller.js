@@ -1,5 +1,6 @@
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
+import User from "../models/user.model.js";
 
 export const createNewProduct = async (req, res, next) => {
     const {
@@ -121,11 +122,31 @@ export const getProductById = async (req, res, next) => {
             throw err;
         }
 
+        const rawReviewInfo = await Promise.all(
+            product.reviews.map(async (review) => {
+                const user = await User.findById(review.userId).select(
+                    "avatar username"
+                );
+
+                if (!user) {
+                    return null;
+                }
+
+                return {
+                    review,
+                    user,
+                };
+            })
+        );
+
+        const cleanedReviewInfo = rawReviewInfo.filter(Boolean);
+
         res.status(200).json({
             success: true,
             message: "Product fetched successfully",
             data: {
                 product,
+                reviews: cleanedReviewInfo,
             },
         });
     } catch (err) {
@@ -163,9 +184,17 @@ export const deleteProduct = async (req, res, next) => {
 
 export const addReview = async (req, res, next) => {
     const productId = req.params.productId;
-    const { userId, rating, description, images } = req.body;
+    const { userId, rating, description } = req.body;
 
     try {
+        const user = await User.findById(userId).select("avatar name");
+
+        if (!user) {
+            const err = new Error("Cannot find the user");
+            err.statusCode = 404;
+            throw err;
+        }
+
         const existingProduct = await Product.findById(productId);
 
         if (!existingProduct) {
@@ -210,7 +239,6 @@ export const addReview = async (req, res, next) => {
             userId,
             rating,
             description,
-            images,
         };
 
         const newRating = {
@@ -224,11 +252,31 @@ export const addReview = async (req, res, next) => {
             { new: true, runValidators: true }
         );
 
+        const rawReviewInfo = await Promise.all(
+            product.reviews.map(async (review) => {
+                const user = await User.findById(review.userId).select(
+                    "avatar username"
+                );
+
+                if (!user) {
+                    return null;
+                }
+
+                return {
+                    review,
+                    user,
+                };
+            })
+        );
+
+        const cleanedReviewInfo = rawReviewInfo.filter(Boolean);
+
         res.status(200).json({
             success: true,
             message: "Review added successfully",
             data: {
                 product,
+                reviews: cleanedReviewInfo,
             },
         });
     } catch (err) {
