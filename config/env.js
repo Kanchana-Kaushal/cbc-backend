@@ -12,3 +12,9 @@ export const pepper = process.env.PEPPER;
 
 //JWT Secret Key
 export const jwtSecretKey = process.env.JWT_KEY;
+
+//Email
+export const myEmail = process.env.EMAIL;
+
+//App password
+export const appPassword = process.env.APP_PASSWORD;

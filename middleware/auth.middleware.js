@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import { jwtSecretKey } from "../config/env.js";
+import VerificationCode from "../models/verificationCode.model.js";
+import { verifyHash } from "../utils/argon2.util.js";
 
 //This is basic jwt verification
 export const authMiddleware = (req, res, next) => {
@@ -49,6 +51,38 @@ export const verifyAdmin = (req, res, next) => {
             err.statusCode = 401;
             throw err;
         }
+    } catch (err) {
+        next(err);
+    }
+};
+
+//This middleware is used to verify OTP codes
+export const verifyCode = async (req, res, next) => {
+    const code = req.body.code;
+
+    const email = req.body.data.email;
+
+    try {
+        const verifyInfo = await VerificationCode.findOne({ email: email });
+
+        if (!verifyInfo) {
+            const err = new Error(
+                "Your Code is Expired! Try resending the code."
+            );
+            err.statusCode = 410;
+            throw err;
+        }
+
+        const isCodeValid = await verifyHash(verifyInfo.code, code.toString());
+
+        if (!isCodeValid) {
+            const err = new Error("Verification code does not match");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        await VerificationCode.deleteMany({ email });
+        next();
     } catch (err) {
         next(err);
     }
