@@ -8,11 +8,14 @@ import {
     addReview,
     updateProduct,
     hideReview,
+    searchProducts,
 } from "../controllers/product.controller.js";
 
 const productRouter = Router();
 
 productRouter.get("/", getAllProducts);
+
+productRouter.get("/search", searchProducts);
 
 productRouter.get("/:productId", getProductById);
 

@@ -368,3 +368,56 @@ export const hideReview = async (req, res, next) => {
         next(err);
     }
 };
+
+export const searchProducts = async (req, res, next) => {
+    const query = req.query.query;
+
+    try {
+        if (req.user) {
+            const results = await Product.find(
+                query && query.trim() !== " "
+                    ? {
+                          $or: [
+                              { name: { $regex: query, $options: "i" } },
+                              { keywords: { $regex: query, $options: "i" } },
+                              { category: { $regex: query, $options: "i" } },
+                          ],
+                      }
+                    : {}
+            )
+                .sort({ createdAt: -1 })
+                .select("-__v");
+
+            res.status(200).json({
+                success: true,
+                message: "Products searched successfully",
+                products: results,
+            });
+
+            return;
+        }
+
+        const results = await Product.find(
+            query && query.trim() !== ""
+                ? {
+                      $or: [
+                          { name: { $regex: query, $options: "i" } },
+                          { keywords: { $regex: query, $options: "i" } },
+                          { category: { $regex: query, $options: "i" } },
+                      ],
+                      "inventory.available": true,
+                  }
+                : { "inventory.available": true }
+        )
+            .sort({ createdAt: -1 })
+            .select("-__v");
+
+        res.status(200).json({
+            success: true,
+            message: "Products searched successfully",
+            products: results,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
