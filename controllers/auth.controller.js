@@ -572,3 +572,27 @@ export const sendVerificationCode = async (req, res, next) => {
         next(err);
     }
 };
+
+export const checkAdmin = async (req, res, next) => {
+    try {
+        if (req.user) {
+            const role = req.user.role;
+            if (role === "admin") {
+                res.status(200).json({
+                    success: true,
+                    message: "Authorized access",
+                });
+            } else {
+                const err = new Error("This operation is admin only");
+                err.statusCode = 401;
+                throw err;
+            }
+        } else {
+            const err = new Error("User unauthorized");
+            err.statusCode = 401;
+            throw err;
+        }
+    } catch (err) {
+        next(err);
+    }
+};
