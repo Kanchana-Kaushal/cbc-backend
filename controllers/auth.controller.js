@@ -596,3 +596,51 @@ export const checkAdmin = async (req, res, next) => {
         next(err);
     }
 };
+
+export const checkUser = async (req, res, next) => {
+    console.log(req.body);
+
+    const email = req.body.email;
+    console.log(email);
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "User exists",
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const changePassword = async (req, res, next) => {
+    const { password, email } = req.body.data;
+
+    try {
+        const hashedPassword = await generateHash(password);
+
+        await User.updateOne(
+            { email },
+            { $set: { password: hashedPassword } },
+            { runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Password changed successfully",
+        });
+    } catch (err) {
+        next(err);
+    }
+};
