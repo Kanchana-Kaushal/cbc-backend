@@ -84,7 +84,7 @@ export const getUserById = async (req, res, next) => {
     }
 };
 
-export const updateUser = async (req, res, next) => {
+export const updateUserAvatar = async (req, res, next) => {
     const { userId } = req.user;
     const id = req.params.id;
     const avatar = req.body.avatar;
