@@ -12,14 +12,14 @@ const productSchema = new mongoose.Schema(
             required: [true, "Product name is required"],
             trim: true,
             minLength: 2,
-            maxLength: 50,
+            maxLength: 75,
         },
 
         description: {
             type: String,
             required: [true, "Product description is required"],
             minLength: 2,
-            maxLength: 500,
+            maxLength: 750,
         },
 
         images: [
@@ -125,7 +125,7 @@ const productSchema = new mongoose.Schema(
                 },
                 description: {
                     type: String,
-                    maxLength: 150,
+                    maxLength: 500,
                     required: true,
                 },
                 createdAt: {
