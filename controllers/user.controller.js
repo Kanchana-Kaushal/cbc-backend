@@ -1,8 +1,19 @@
 import User from "../models/user.model.js";
 
 export const getAllUsers = async (req, res, next) => {
+    const query = req.query.query;
+
     try {
-        const users = await User.find().select("-__v -password");
+        const users = await User.find(
+            query && query.trim() !== ""
+                ? {
+                      $or: [
+                          { username: { $regex: query, $options: "i" } },
+                          { email: { $regex: query, $options: "i" } },
+                      ],
+                  }
+                : {}
+        ).select("-__v -password");
 
         res.status(200).json({
             success: true,

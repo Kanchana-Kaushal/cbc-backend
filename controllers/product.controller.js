@@ -374,27 +374,46 @@ export const searchProducts = async (req, res, next) => {
 
     try {
         if (req.user) {
-            const results = await Product.find(
-                query && query.trim() !== " "
-                    ? {
-                          $or: [
-                              { name: { $regex: query, $options: "i" } },
-                              { keywords: { $regex: query, $options: "i" } },
-                              { category: { $regex: query, $options: "i" } },
-                          ],
-                      }
-                    : {}
-            )
-                .sort({ createdAt: -1 })
-                .select("-__v");
+            const role = req.user.role;
+            if (role === "admin") {
+                const results = await Product.find(
+                    query && query.trim() !== " "
+                        ? {
+                              $or: [
+                                  { name: { $regex: query, $options: "i" } },
+                                  {
+                                      keywords: {
+                                          $regex: query,
+                                          $options: "i",
+                                      },
+                                  },
+                                  {
+                                      category: {
+                                          $regex: query,
+                                          $options: "i",
+                                      },
+                                  },
+                                  {
+                                      productId: {
+                                          $regex: query,
+                                          $options: "i",
+                                      },
+                                  },
+                              ],
+                          }
+                        : {}
+                )
+                    .sort({ createdAt: -1 })
+                    .select("-__v");
 
-            res.status(200).json({
-                success: true,
-                message: "Products searched successfully",
-                products: results,
-            });
+                res.status(200).json({
+                    success: true,
+                    message: "Products searched successfully",
+                    products: results,
+                });
 
-            return;
+                return;
+            }
         }
 
         const results = await Product.find(
