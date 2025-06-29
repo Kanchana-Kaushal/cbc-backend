@@ -110,10 +110,58 @@ export const placeOrder = async (req, res, next) => {
 };
 
 export const getAllOrders = async (req, res, next) => {
-    let status = req.params.status;
+    const status = req.params.status;
+    const query = req.query.query;
 
     try {
-        const orders = await Order.find({ status }).sort({ date: -1 });
+        const orders = await Order.find(
+            query && query.trim() !== ""
+                ? {
+                      status,
+                      $or: [
+                          { orderId: { $regex: query, $options: "i" } },
+                          {
+                              "deliveryDetails.address.city": {
+                                  $regex: query,
+                                  $options: "i",
+                              },
+                          },
+                          {
+                              "deliveryDetails.address.province": {
+                                  $regex: query,
+                                  $options: "i",
+                              },
+                          },
+                          {
+                              "deliveryDetails.address.country": {
+                                  $regex: query,
+                                  $options: "i",
+                              },
+                          },
+                          {
+                              "deliveryDetails.tel": {
+                                  $regex: query,
+                                  $options: "i",
+                              },
+                          },
+                          {
+                              "deliveryDetails.tel02": {
+                                  $regex: query,
+                                  $options: "i",
+                              },
+                          },
+                          {
+                              paymentMethod: {
+                                  $regex: query,
+                                  $options: "i",
+                              },
+                          },
+                      ],
+                  }
+                : { status }
+        )
+            .sort({ createdAt: -1 })
+            .select("-__v");
 
         res.status(200).json({
             success: true,
