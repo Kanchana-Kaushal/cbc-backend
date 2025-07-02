@@ -42,8 +42,6 @@ const productSchema = new mongoose.Schema(
                 "makeup",
                 "haircare",
                 "fragrance",
-                "bath_body",
-                "tools_accessories",
                 "men",
                 "gifts_sets",
             ],

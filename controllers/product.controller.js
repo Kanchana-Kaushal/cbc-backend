@@ -70,46 +70,6 @@ export const createNewProduct = async (req, res, next) => {
     }
 };
 
-export const getAllProducts = async (req, res, next) => {
-    try {
-        if (req.user) {
-            const role = req.user.role;
-
-            if (role === "admin") {
-                const products = await Product.find()
-                    .sort({ createdAt: -1 })
-                    .select("-__v");
-
-                res.status(200).json({
-                    success: true,
-                    message: "Products fetched successfully",
-                    data: {
-                        products,
-                    },
-                });
-
-                return;
-            }
-        }
-
-        const products = await Product.find({
-            "inventory.available": true,
-        })
-            .sort({ createdAt: -1 })
-            .select("-__v ");
-
-        res.status(200).json({
-            success: true,
-            message: "Products fetched successfully",
-            data: {
-                products,
-            },
-        });
-    } catch (err) {
-        next(err);
-    }
-};
-
 export const getProductById = async (req, res, next) => {
     const productId = req.params.productId;
 
@@ -435,6 +395,48 @@ export const searchProducts = async (req, res, next) => {
             success: true,
             message: "Products searched successfully",
             products: results,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getCustomProducts = async (req, res, next) => {
+    const criteria = req.body.criteria;
+    try {
+        if (req.user) {
+            const role = req.user.role;
+
+            if (role === "admin") {
+                const products = await Product.find({ ...criteria })
+                    .sort({ createdAt: -1 })
+                    .select("-__v");
+
+                res.status(200).json({
+                    success: true,
+                    message: "Products fetched successfully",
+                    data: {
+                        products,
+                    },
+                });
+
+                return;
+            }
+        }
+
+        const products = await Product.find({
+            "inventory.available": true,
+            ...criteria,
+        })
+            .sort({ createdAt: -1 })
+            .select("-__v ");
+
+        res.status(200).json({
+            success: true,
+            message: "Products fetched successfully",
+            data: {
+                products,
+            },
         });
     } catch (err) {
         next(err);
