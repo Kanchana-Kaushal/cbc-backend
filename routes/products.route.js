@@ -3,17 +3,17 @@ import { verifyAdmin, verifyUser } from "../middleware/auth.middleware.js";
 import {
     createNewProduct,
     deleteProduct,
-    getAllProducts,
     getProductById,
     addReview,
     updateProduct,
     hideReview,
     searchProducts,
+    getCustomProducts,
 } from "../controllers/product.controller.js";
 
 const productRouter = Router();
 
-productRouter.get("/", getAllProducts);
+productRouter.post("/custom", getCustomProducts);
 
 productRouter.get("/search", searchProducts);
 
