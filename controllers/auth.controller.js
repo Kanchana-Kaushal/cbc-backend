@@ -220,7 +220,7 @@ export const googleLogin = async (req, res, next) => {
 
         const isPasswordValid = await verifyHash(
             existingUser.password,
-            "ThisIsAManualMadePasswordForGoogleLoginPeople"
+            "ThisIsAManualMadePasswordForGoogleLoginUsers"
         );
 
         if (!isPasswordValid) {
