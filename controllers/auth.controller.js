@@ -218,9 +218,10 @@ export const googleLogin = async (req, res, next) => {
             throw err;
         }
 
-        const isPasswordValid =
-            existingUser.password ===
-            "ThisIsAManualMadePasswordForGoogleLoginPeople";
+        const isPasswordValid = await verifyHash(
+            existingUser.password,
+            "ThisIsAManualMadePasswordForGoogleLoginPeople"
+        );
 
         if (!isPasswordValid) {
             const err = new Error("Password does not match");
