@@ -11,6 +11,7 @@ import cors from "cors";
 import { globalRateLimiter } from "./middleware/rateLimiter.middleware.js";
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(globalRateLimiter);
 app.use(authMiddleware);
