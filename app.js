@@ -8,9 +8,11 @@ import productRouter from "./routes/products.route.js";
 import errorHandler from "./middleware/error.middleware.js";
 import { authMiddleware } from "./middleware/auth.middleware.js";
 import cors from "cors";
+import { globalRateLimiter } from "./middleware/rateLimiter.middleware.js";
 
 const app = express();
 app.use(cors());
+app.use(globalRateLimiter);
 app.use(authMiddleware);
 app.use(express.json());
 
@@ -33,7 +35,6 @@ app.use(errorHandler);
 
 app.listen(PORT, async () => {
     console.log("Server is listening on PORT " + PORT);
-
     try {
         await mongoose.connect(connString);
         console.log("Database connected successfully");

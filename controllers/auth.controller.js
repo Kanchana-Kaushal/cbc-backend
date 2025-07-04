@@ -35,7 +35,10 @@ export const signUp = async (req, res, next) => {
             role: newUser.role,
         };
 
-        const token = genToken(payload);
+        const token =
+            payload.role === "admin"
+                ? genToken(payload, "3h")
+                : genToken(payload, "7d");
 
         res.status(200).json({
             success: true,
@@ -90,7 +93,10 @@ export const signIn = async (req, res, next) => {
             role: user.role,
         };
 
-        const token = genToken(payload);
+        const token =
+            payload.role === "admin"
+                ? genToken(payload, "3h")
+                : genToken(payload, "7d");
 
         res.status(200).json({
             success: true,
@@ -190,7 +196,10 @@ export const googleLogin = async (req, res, next) => {
                 role: newUser.role,
             };
 
-            const token = genToken(payload);
+            const token =
+                payload.role === "admin"
+                    ? genToken(payload, "3h")
+                    : genToken(payload, "7d");
 
             res.status(200).json({
                 success: true,
@@ -224,7 +233,10 @@ export const googleLogin = async (req, res, next) => {
             role: existingUser.role,
         };
 
-        const token = genToken(payload);
+        const token =
+            payload.role === "admin"
+                ? genToken(payload, "3h")
+                : genToken(payload, "7d");
 
         res.status(200).json({
             success: true,
@@ -588,10 +600,7 @@ export const checkAdmin = async (req, res, next) => {
 };
 
 export const checkUser = async (req, res, next) => {
-    console.log(req.body);
-
     const email = req.body.email;
-    console.log(email);
 
     try {
         const user = await User.findOne({ email });
