@@ -25,7 +25,7 @@ export const verifyUser = (req, res, next) => {
         if (req.user) {
             next();
         } else {
-            const err = new Error("User unauthorized");
+            const err = new Error("User unauthorized, Please sign in again");
             err.statusCode = 401;
             throw err;
         }
