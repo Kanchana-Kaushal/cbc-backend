@@ -9,16 +9,18 @@ import errorHandler from "./middleware/error.middleware.js";
 import { authMiddleware } from "./middleware/auth.middleware.js";
 import cors from "cors";
 import { globalRateLimiter } from "./middleware/rateLimiter.middleware.js";
+import morgan from "morgan";
 
 const app = express();
 app.set("trust proxy", 1);
 
 app.use(
     cors({
-        origin: frontEndUrl, //http://localhost:5173/
+        origin: frontEndUrl, //frontEndUrl, "http://localhost:5173"
     })
 );
 
+app.use(morgan("dev"));
 app.use(globalRateLimiter);
 app.use(authMiddleware);
 app.use(express.json());

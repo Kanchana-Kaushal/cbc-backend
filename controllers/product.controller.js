@@ -84,6 +84,10 @@ export const getProductById = async (req, res, next) => {
 
         const rawReviewInfo = await Promise.all(
             product.reviews.map(async (review) => {
+                if (review.hidden === true) {
+                    return;
+                }
+
                 const user = await User.findById(review.userId).select(
                     "avatar username"
                 );
@@ -363,7 +367,7 @@ export const searchProducts = async (req, res, next) => {
                           }
                         : {}
                 )
-                    .sort({ createdAt: -1 })
+                    .sort({ "inventory.available": 1 })
                     .select("-__v");
 
                 res.status(200).json({
