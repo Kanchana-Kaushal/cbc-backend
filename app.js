@@ -1,5 +1,5 @@
 import express from "express";
-import { PORT, connString } from "./config/env.js";
+import { PORT, connString, frontEndUrl } from "./config/env.js";
 import mongoose from "mongoose";
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
@@ -12,7 +12,13 @@ import { globalRateLimiter } from "./middleware/rateLimiter.middleware.js";
 
 const app = express();
 app.set("trust proxy", 1);
-app.use(cors());
+
+app.use(
+    cors({
+        origin: frontEndUrl, //http://localhost:5173/
+    })
+);
+
 app.use(globalRateLimiter);
 app.use(authMiddleware);
 app.use(express.json());

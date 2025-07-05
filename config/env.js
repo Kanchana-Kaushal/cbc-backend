@@ -18,3 +18,6 @@ export const myEmail = process.env.EMAIL;
 
 //App password
 export const appPassword = process.env.APP_PASSWORD;
+
+//FrontEnd URL
+export const frontEndUrl = process.env.FRONTEND_URL;
