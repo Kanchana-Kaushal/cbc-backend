@@ -72,6 +72,7 @@ export const createNewProduct = async (req, res, next) => {
 
 export const getProductById = async (req, res, next) => {
     const productId = req.params.productId;
+    const userId = req.user?.userId || undefined;
 
     try {
         const product = await Product.findById(productId);
@@ -84,8 +85,10 @@ export const getProductById = async (req, res, next) => {
 
         const rawReviewInfo = await Promise.all(
             product.reviews.map(async (review) => {
-                if (review.hidden === true) {
-                    return;
+                if (!userId || !review.userId.equals(userId)) {
+                    if (review.hidden === true) {
+                        return;
+                    }
                 }
 
                 const user = await User.findById(review.userId).select(
@@ -93,7 +96,7 @@ export const getProductById = async (req, res, next) => {
                 );
 
                 if (!user) {
-                    return null;
+                    return;
                 }
 
                 return {
@@ -103,7 +106,16 @@ export const getProductById = async (req, res, next) => {
             })
         );
 
-        const cleanedReviewInfo = rawReviewInfo.filter(Boolean);
+        let cleanedReviewInfo = rawReviewInfo.filter(Boolean);
+
+        cleanedReviewInfo = [
+            ...cleanedReviewInfo.filter((review) =>
+                review.review.userId.equals(userId)
+            ),
+            ...cleanedReviewInfo.filter(
+                (review) => !review.review.userId.equals(userId)
+            ),
+        ];
 
         res.status(200).json({
             success: true,
@@ -441,6 +453,69 @@ export const getCustomProducts = async (req, res, next) => {
             data: {
                 products,
             },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const deleteReview = async (req, res, next) => {
+    const { productId, reviewId } = req.params;
+    const userId = req.user.userId;
+
+    try {
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            const err = new Error("Cannot find the product");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const reviewIndex = product.reviews.findIndex((review) =>
+            review._id.equals(reviewId)
+        );
+
+        if (reviewIndex === -1) {
+            const err = new Error("Cannot find the review");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        if (!product.reviews[reviewIndex].userId.equals(userId)) {
+            const err = new Error("Only the author can delete this review");
+            err.statusCode = 403;
+            throw err;
+        }
+
+        const reviewRating = product.reviews[reviewIndex].rating;
+        const averageRating = product.rating.average;
+        const ratingCount = product.rating.count;
+        const newRatingCount = ratingCount - 1;
+        const newAverageRating =
+            newRatingCount === 0
+                ? 0
+                : (averageRating * ratingCount - reviewRating) / newRatingCount;
+
+        const newReviewArray = product.reviews.filter(
+            (review) => !review.userId.equals(userId)
+        );
+
+        await Product.updateOne(
+            { _id: productId },
+            {
+                $set: {
+                    "rating.average": newAverageRating, // Updated average after deletion
+                    "rating.count": newRatingCount, // Updated count after deletion
+                    reviews: newReviewArray, // Replaces with filtered reviews
+                },
+            },
+            { runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Review deleted successfully",
         });
     } catch (err) {
         next(err);
