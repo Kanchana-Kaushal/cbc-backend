@@ -1,37 +1,46 @@
 import express from "express";
-import { PORT, connString, frontEndUrl } from "./config/env.js";
 import mongoose from "mongoose";
-import userRouter from "./routes/user.route.js";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import ExpressMongoSanitize from "express-mongo-sanitize";
+import { PORT, connString, frontEndUrl } from "./config/env.js";
+import { globalRateLimiter } from "./middleware/rateLimiter.middleware.js";
+import { authMiddleware } from "./middleware/auth.middleware.js";
+import errorHandler from "./middleware/error.middleware.js";
 import authRouter from "./routes/auth.route.js";
+import userRouter from "./routes/user.route.js";
 import orderRouter from "./routes/order.route.js";
 import productRouter from "./routes/products.route.js";
-import errorHandler from "./middleware/error.middleware.js";
-import { authMiddleware } from "./middleware/auth.middleware.js";
-import cors from "cors";
-import { globalRateLimiter } from "./middleware/rateLimiter.middleware.js";
-import morgan from "morgan";
 
 const app = express();
+
 app.set("trust proxy", 1);
+
+app.use(helmet());
 
 app.use(
     cors({
-        origin: frontEndUrl, //frontEndUrl, "http://localhost:5173"
+        origin: frontEndUrl || "http://localhost:5173",
+        credentials: true,
     })
 );
 
 app.use(morgan("dev"));
+
 app.use(globalRateLimiter);
-app.use(authMiddleware);
+
 app.use(express.json());
 
-//routes
+app.use(ExpressMongoSanitize());
+
+app.use(authMiddleware);
+
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
 
-//This middleware will handle invalid requests
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -39,7 +48,6 @@ app.use((req, res) => {
     });
 });
 
-//This middleware will work if a error happens
 app.use(errorHandler);
 
 app.listen(PORT, async () => {
