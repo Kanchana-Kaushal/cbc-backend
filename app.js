@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import ExpressMongoSanitize from "express-mongo-sanitize";
 import { PORT, connString, frontEndUrl } from "./config/env.js";
 import { globalRateLimiter } from "./middleware/rateLimiter.middleware.js";
 import { authMiddleware } from "./middleware/auth.middleware.js";
@@ -31,8 +30,6 @@ app.use(morgan("dev"));
 app.use(globalRateLimiter);
 
 app.use(express.json());
-
-app.use(ExpressMongoSanitize());
 
 app.use(authMiddleware);
 
