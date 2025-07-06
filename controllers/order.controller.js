@@ -323,6 +323,8 @@ export const updateStatus = async (req, res, next) => {
     const { userId, role } = req.user;
     const { status } = req.body;
 
+    console.log(status);
+
     try {
         if (role === "admin") {
             const orderExists = await Order.findOne({ orderId });
@@ -338,6 +340,30 @@ export const updateStatus = async (req, res, next) => {
                 { $set: { status } },
                 { runValidators: true }
             );
+
+            if (status === "cancelled") {
+                await Promise.all(
+                    orderExists.products.map(async (product) => {
+                        const productExists = await Product.findById(
+                            product.productId
+                        );
+
+                        const newStockLeft =
+                            productExists.inventory.stockLeft + product.qty;
+                        const available = newStockLeft > 0;
+
+                        await Product.updateOne(
+                            { _id: productExists._id },
+                            {
+                                $set: {
+                                    "inventory.stockLeft": newStockLeft,
+                                    "inventory.available": available,
+                                },
+                            }
+                        );
+                    })
+                );
+            }
 
             const order = await Order.findOne({ orderId });
 
@@ -360,14 +386,16 @@ export const updateStatus = async (req, res, next) => {
             throw err;
         }
 
-        if (!userId === orderExists.userId) {
-            const err = new Error("User unauthoerized");
+        if (!orderExists.userId.equals(userId)) {
+            const err = new Error("User unauthorized");
             err.statusCode = 403;
             throw err;
         }
 
         if (
-            orderExists.status.includes("confirmed", "in-transit", "delivered")
+            ["confirmed", "in-transit", "delivered"].includes(
+                orderExists.status
+            )
         ) {
             const err = new Error("You cannot update order once its confirmed");
             err.statusCode = 403;
@@ -379,6 +407,30 @@ export const updateStatus = async (req, res, next) => {
             { $set: { status } },
             { runValidators: true }
         );
+
+        if (status === "cancelled") {
+            await Promise.all(
+                orderExists.products.map(async (product) => {
+                    const productExists = await Product.findById(
+                        product.productId
+                    );
+
+                    const newStockLeft =
+                        productExists.inventory.stockLeft + product.qty;
+                    const available = newStockLeft > 0;
+
+                    await Product.updateOne(
+                        { _id: productExists._id },
+                        {
+                            $set: {
+                                "inventory.stockLeft": newStockLeft,
+                                "inventory.available": available,
+                            },
+                        }
+                    );
+                })
+            );
+        }
 
         const order = await Order.findOne({ orderId });
 
