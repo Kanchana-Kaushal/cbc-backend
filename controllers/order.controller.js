@@ -194,7 +194,9 @@ export const getOrderByUserId = async (req, res, next) => {
             throw err;
         }
 
-        const orders = await Order.find({ userId: userId }).sort({ date: -1 });
+        const orders = await Order.find({ userId: userId }).sort({
+            createdAt: 1,
+        });
 
         if (orders.length > 0) {
             const detailedOrders = await Promise.all(
