@@ -9,6 +9,7 @@ import {
     hideReview,
     searchProducts,
     getCustomProducts,
+    deleteReview,
 } from "../controllers/product.controller.js";
 
 const productRouter = Router();
@@ -22,6 +23,8 @@ productRouter.get("/:productId", getProductById);
 productRouter.post("/add-new", verifyAdmin, createNewProduct);
 
 productRouter.post("/:productId/add-review", verifyUser, addReview);
+
+productRouter.delete("/:productId/reviews/:reviewId", verifyUser, deleteReview);
 
 productRouter.delete("/:productId", verifyAdmin, deleteProduct);
 
